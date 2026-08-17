@@ -3,6 +3,12 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release tag to publish (e.g. v0.1.0). Leave empty for a plain analyze/test/build run.'
+        required: false
+        default: ''
 
 env:
   FLUTTER_VERSION: '3.47.0'
@@ -59,9 +65,14 @@ jobs:
           retention-days: 14
 
   release-android:
-    name: Release Android (signed, on tag)
+    name: Release Android (signed)
     needs: [analyze, test]
-    if: startsWith(github.ref, 'refs/tags/v')
+    # A v* tag push is the normal trigger (BUILD.md § Release). Manual
+    # workflow_dispatch with a version input is the fallback for cutting a
+    # release from a branch this session can't push tags to directly.
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.version != '')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -74,10 +85,19 @@ jobs:
           cache: true
       - run: flutter pub get
 
+      - name: Determine release tag
+        id: release_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
       # Signing secrets (ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
       # ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD) haven't been provisioned in
       # this repo yet — see BUILD.md § Android. Until they are, this falls
-      # back to a debug-signed build rather than failing every tag push.
+      # back to a debug-signed build rather than failing every release.
       - name: Configure release signing
         if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         env:
@@ -96,6 +116,9 @@ jobs:
 
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          prerelease: true
           files: build/app/outputs/flutter-apk/*.apk
           fail_on_unmatched_files: true
 
