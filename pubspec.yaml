@@ -1,0 +1,30 @@
+name: linguaforge
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  dio: ^5.11.0
+  drift: ^2.31.0
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  flutter_secure_storage: ^10.3.1
+  just_audio: ^0.9.46
+  path: ^1.9.0
+  path_provider: ^2.1.5
+  record: ^6.2.1
+  sqlite3_flutter_libs: ^0.5.42
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.16.0
+  drift_dev: ^2.34.5
+
+flutter:
+  uses-material-design: true
