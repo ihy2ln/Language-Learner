@@ -1,0 +1,29 @@
+{
+  "_comment": "Task -> default/fallback model routing, per PROVIDERS.md's routing table. Model identifiers are illustrative, not verified current — update this file (no app release needed for content changes, though asset bundling still requires a rebuild today) as providers change their lineup.",
+  "tasks": {
+    "conversationPractice": {
+      "default": { "provider": "gemini", "model": "gemini-2.5-flash" },
+      "fallback": { "provider": "openai", "model": "gpt-4o-mini" }
+    },
+    "grammarExplanation": {
+      "default": { "provider": "anthropic", "model": "claude-sonnet-4-5" },
+      "fallback": { "provider": "gemini", "model": "gemini-2.5-pro" }
+    },
+    "sentenceGeneration": {
+      "default": { "provider": "gemini", "model": "gemini-2.5-flash" },
+      "fallback": { "provider": "deepseek", "model": "deepseek-chat" }
+    },
+    "errorCorrection": {
+      "default": { "provider": "anthropic", "model": "claude-sonnet-4-5" },
+      "fallback": { "provider": "openai", "model": "gpt-4o" }
+    },
+    "translationCheck": {
+      "default": { "provider": "deepseek", "model": "deepseek-chat" },
+      "fallback": { "provider": "glm", "model": "glm-4.5" }
+    },
+    "offline": {
+      "default": { "provider": "ollama", "model": "qwen3:4b-instruct-q4_K_M" },
+      "fallback": { "provider": "ollama", "model": "gemma3:4b-instruct-q4_K_M" }
+    }
+  }
+}
