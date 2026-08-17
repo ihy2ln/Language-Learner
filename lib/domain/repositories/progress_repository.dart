@@ -11,7 +11,12 @@ abstract interface class ProgressRepository {
     String languageCode,
     String itemId,
   );
-  Future<Result<void, AppError>> save(
+
+  /// Returns `Ok(true)` on success. `Result<void, ...>` doesn't work in
+  /// Dart (`void` can't be used as a constructed value — `Ok<void, E>`
+  /// won't typecheck against a `null` payload), so this uses `bool`
+  /// instead of the `void` this originally shipped with.
+  Future<Result<bool, AppError>> save(
     String languageCode,
     UserProgress progress,
   );
