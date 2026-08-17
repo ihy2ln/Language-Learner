@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../settings/settings_screen.dart';
 import 'review_screen.dart';
 
 /// Launch screen for the one seeded language. Stands in for the
@@ -11,7 +12,21 @@ class ReviewHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('LinguaForge')),
+      appBar: AppBar(
+        title: const Text('LinguaForge'),
+        actions: [
+          IconButton(
+            key: const Key('open-settings-button'),
+            icon: const Icon(Icons.settings),
+            tooltip: 'Provider keys',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+              );
+            },
+          ),
+        ],
+      ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
