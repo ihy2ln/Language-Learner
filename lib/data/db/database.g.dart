@@ -3010,6 +3010,208 @@ class UserProgressTableCompanion extends UpdateCompanion<UserProgressRow> {
   }
 }
 
+class $CheckInsTable extends CheckIns
+    with TableInfo<$CheckInsTable, CheckInRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CheckInsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _languageCodeMeta =
+      const VerificationMeta('languageCode');
+  @override
+  late final GeneratedColumn<String> languageCode = GeneratedColumn<String>(
+      'language_code', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES languages (code)'));
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+      'date', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [languageCode, date];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'check_ins';
+  @override
+  VerificationContext validateIntegrity(Insertable<CheckInRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('language_code')) {
+      context.handle(
+          _languageCodeMeta,
+          languageCode.isAcceptableOrUnknown(
+              data['language_code']!, _languageCodeMeta));
+    } else if (isInserting) {
+      context.missing(_languageCodeMeta);
+    }
+    if (data.containsKey('date')) {
+      context.handle(
+          _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {languageCode, date};
+  @override
+  CheckInRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CheckInRow(
+      languageCode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}language_code'])!,
+      date: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}date'])!,
+    );
+  }
+
+  @override
+  $CheckInsTable createAlias(String alias) {
+    return $CheckInsTable(attachedDatabase, alias);
+  }
+}
+
+class CheckInRow extends DataClass implements Insertable<CheckInRow> {
+  final String languageCode;
+
+  /// 'YYYY-MM-DD' in the device's local calendar — a streak is a "did I
+  /// show up today" concept, not a UTC instant, so this deliberately isn't
+  /// a DateTimeColumn.
+  final String date;
+  const CheckInRow({required this.languageCode, required this.date});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['language_code'] = Variable<String>(languageCode);
+    map['date'] = Variable<String>(date);
+    return map;
+  }
+
+  CheckInsCompanion toCompanion(bool nullToAbsent) {
+    return CheckInsCompanion(
+      languageCode: Value(languageCode),
+      date: Value(date),
+    );
+  }
+
+  factory CheckInRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CheckInRow(
+      languageCode: serializer.fromJson<String>(json['languageCode']),
+      date: serializer.fromJson<String>(json['date']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'languageCode': serializer.toJson<String>(languageCode),
+      'date': serializer.toJson<String>(date),
+    };
+  }
+
+  CheckInRow copyWith({String? languageCode, String? date}) => CheckInRow(
+        languageCode: languageCode ?? this.languageCode,
+        date: date ?? this.date,
+      );
+  CheckInRow copyWithCompanion(CheckInsCompanion data) {
+    return CheckInRow(
+      languageCode: data.languageCode.present
+          ? data.languageCode.value
+          : this.languageCode,
+      date: data.date.present ? data.date.value : this.date,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckInRow(')
+          ..write('languageCode: $languageCode, ')
+          ..write('date: $date')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(languageCode, date);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CheckInRow &&
+          other.languageCode == this.languageCode &&
+          other.date == this.date);
+}
+
+class CheckInsCompanion extends UpdateCompanion<CheckInRow> {
+  final Value<String> languageCode;
+  final Value<String> date;
+  final Value<int> rowid;
+  const CheckInsCompanion({
+    this.languageCode = const Value.absent(),
+    this.date = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CheckInsCompanion.insert({
+    required String languageCode,
+    required String date,
+    this.rowid = const Value.absent(),
+  })  : languageCode = Value(languageCode),
+        date = Value(date);
+  static Insertable<CheckInRow> custom({
+    Expression<String>? languageCode,
+    Expression<String>? date,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (languageCode != null) 'language_code': languageCode,
+      if (date != null) 'date': date,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CheckInsCompanion copyWith(
+      {Value<String>? languageCode, Value<String>? date, Value<int>? rowid}) {
+    return CheckInsCompanion(
+      languageCode: languageCode ?? this.languageCode,
+      date: date ?? this.date,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (languageCode.present) {
+      map['language_code'] = Variable<String>(languageCode.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CheckInsCompanion(')
+          ..write('languageCode: $languageCode, ')
+          ..write('date: $date, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3023,6 +3225,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ItemTagsTable itemTags = $ItemTagsTable(this);
   late final $UserProgressTableTable userProgressTable =
       $UserProgressTableTable(this);
+  late final $CheckInsTable checkIns = $CheckInsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3035,7 +3238,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         items,
         grammarNoteExamples,
         itemTags,
-        userProgressTable
+        userProgressTable,
+        checkIns
       ];
 }
 
@@ -3087,6 +3291,20 @@ final class $$LanguagesTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_userProgressTableRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CheckInsTable, List<CheckInRow>>
+      _checkInsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.checkIns,
+              aliasName: 'languages__code__check_ins__language_code');
+
+  $$CheckInsTableProcessedTableManager get checkInsRefs {
+    final manager = $$CheckInsTableTableManager($_db, $_db.checkIns).filter(
+        (f) => f.languageCode.code.sqlEquals($_itemColumn<String>('code')!));
+
+    final cache = $_typedResult.readTableOrNull(_checkInsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -3157,6 +3375,27 @@ class $$LanguagesTableFilterComposer
             $$UserProgressTableTableFilterComposer(
               $db: $db,
               $table: $db.userProgressTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> checkInsRefs(
+      Expression<bool> Function($$CheckInsTableFilterComposer f) f) {
+    final $$CheckInsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.code,
+        referencedTable: $db.checkIns,
+        getReferencedColumn: (t) => t.languageCode,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CheckInsTableFilterComposer(
+              $db: $db,
+              $table: $db.checkIns,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -3282,6 +3521,27 @@ class $$LanguagesTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> checkInsRefs<T extends Object>(
+      Expression<T> Function($$CheckInsTableAnnotationComposer a) f) {
+    final $$CheckInsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.code,
+        referencedTable: $db.checkIns,
+        getReferencedColumn: (t) => t.languageCode,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CheckInsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.checkIns,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$LanguagesTableTableManager extends RootTableManager<
@@ -3295,7 +3555,7 @@ class $$LanguagesTableTableManager extends RootTableManager<
     $$LanguagesTableUpdateCompanionBuilder,
     (LanguageRow, $$LanguagesTableReferences),
     LanguageRow,
-    PrefetchHooks Function({bool userProgressTableRefs})> {
+    PrefetchHooks Function({bool userProgressTableRefs, bool checkInsRefs})> {
   $$LanguagesTableTableManager(_$AppDatabase db, $LanguagesTable table)
       : super(TableManagerState(
           db: db,
@@ -3372,11 +3632,13 @@ class $$LanguagesTableTableManager extends RootTableManager<
                     $$LanguagesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({userProgressTableRefs = false}) {
+          prefetchHooksCallback: (
+              {userProgressTableRefs = false, checkInsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (userProgressTableRefs) db.userProgressTable
+                if (userProgressTableRefs) db.userProgressTable,
+                if (checkInsRefs) db.checkIns
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -3390,6 +3652,19 @@ class $$LanguagesTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$LanguagesTableReferences(db, table, p0)
                                 .userProgressTableRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.languageCode == item.code),
+                        typedResults: items),
+                  if (checkInsRefs)
+                    await $_getPrefetchedData<LanguageRow, $LanguagesTable,
+                            CheckInRow>(
+                        currentTable: table,
+                        referencedTable:
+                            $$LanguagesTableReferences._checkInsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$LanguagesTableReferences(db, table, p0)
+                                .checkInsRefs,
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.languageCode == item.code),
@@ -3412,7 +3687,7 @@ typedef $$LanguagesTableProcessedTableManager = ProcessedTableManager<
     $$LanguagesTableUpdateCompanionBuilder,
     (LanguageRow, $$LanguagesTableReferences),
     LanguageRow,
-    PrefetchHooks Function({bool userProgressTableRefs})>;
+    PrefetchHooks Function({bool userProgressTableRefs, bool checkInsRefs})>;
 typedef $$ContentBundlesTableCreateCompanionBuilder = ContentBundlesCompanion
     Function({
   required String languageCode,
@@ -5981,6 +6256,231 @@ typedef $$UserProgressTableTableProcessedTableManager = ProcessedTableManager<
     (UserProgressRow, $$UserProgressTableTableReferences),
     UserProgressRow,
     PrefetchHooks Function({bool itemId, bool languageCode})>;
+typedef $$CheckInsTableCreateCompanionBuilder = CheckInsCompanion Function({
+  required String languageCode,
+  required String date,
+  Value<int> rowid,
+});
+typedef $$CheckInsTableUpdateCompanionBuilder = CheckInsCompanion Function({
+  Value<String> languageCode,
+  Value<String> date,
+  Value<int> rowid,
+});
+
+final class $$CheckInsTableReferences
+    extends BaseReferences<_$AppDatabase, $CheckInsTable, CheckInRow> {
+  $$CheckInsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $LanguagesTable _languageCodeTable(_$AppDatabase db) =>
+      db.languages.createAlias('check_ins__language_code__languages__code');
+
+  $$LanguagesTableProcessedTableManager get languageCode {
+    final $_column = $_itemColumn<String>('language_code')!;
+
+    final manager = $$LanguagesTableTableManager($_db, $_db.languages)
+        .filter((f) => f.code.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_languageCodeTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CheckInsTableFilterComposer
+    extends Composer<_$AppDatabase, $CheckInsTable> {
+  $$CheckInsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnFilters(column));
+
+  $$LanguagesTableFilterComposer get languageCode {
+    final $$LanguagesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.languageCode,
+        referencedTable: $db.languages,
+        getReferencedColumn: (t) => t.code,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$LanguagesTableFilterComposer(
+              $db: $db,
+              $table: $db.languages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CheckInsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CheckInsTable> {
+  $$CheckInsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get date => $composableBuilder(
+      column: $table.date, builder: (column) => ColumnOrderings(column));
+
+  $$LanguagesTableOrderingComposer get languageCode {
+    final $$LanguagesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.languageCode,
+        referencedTable: $db.languages,
+        getReferencedColumn: (t) => t.code,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$LanguagesTableOrderingComposer(
+              $db: $db,
+              $table: $db.languages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CheckInsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CheckInsTable> {
+  $$CheckInsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  $$LanguagesTableAnnotationComposer get languageCode {
+    final $$LanguagesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.languageCode,
+        referencedTable: $db.languages,
+        getReferencedColumn: (t) => t.code,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$LanguagesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.languages,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CheckInsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CheckInsTable,
+    CheckInRow,
+    $$CheckInsTableFilterComposer,
+    $$CheckInsTableOrderingComposer,
+    $$CheckInsTableAnnotationComposer,
+    $$CheckInsTableCreateCompanionBuilder,
+    $$CheckInsTableUpdateCompanionBuilder,
+    (CheckInRow, $$CheckInsTableReferences),
+    CheckInRow,
+    PrefetchHooks Function({bool languageCode})> {
+  $$CheckInsTableTableManager(_$AppDatabase db, $CheckInsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CheckInsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CheckInsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CheckInsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> languageCode = const Value.absent(),
+            Value<String> date = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CheckInsCompanion(
+            languageCode: languageCode,
+            date: date,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String languageCode,
+            required String date,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CheckInsCompanion.insert(
+            languageCode: languageCode,
+            date: date,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$CheckInsTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({languageCode = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (languageCode) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.languageCode,
+                    referencedTable:
+                        $$CheckInsTableReferences._languageCodeTable(db),
+                    referencedColumn:
+                        $$CheckInsTableReferences._languageCodeTable(db).code,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CheckInsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CheckInsTable,
+    CheckInRow,
+    $$CheckInsTableFilterComposer,
+    $$CheckInsTableOrderingComposer,
+    $$CheckInsTableAnnotationComposer,
+    $$CheckInsTableCreateCompanionBuilder,
+    $$CheckInsTableUpdateCompanionBuilder,
+    (CheckInRow, $$CheckInsTableReferences),
+    CheckInRow,
+    PrefetchHooks Function({bool languageCode})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6001,4 +6501,6 @@ class $AppDatabaseManager {
       $$ItemTagsTableTableManager(_db, _db.itemTags);
   $$UserProgressTableTableTableManager get userProgressTable =>
       $$UserProgressTableTableTableManager(_db, _db.userProgressTable);
+  $$CheckInsTableTableManager get checkIns =>
+      $$CheckInsTableTableManager(_db, _db.checkIns);
 }

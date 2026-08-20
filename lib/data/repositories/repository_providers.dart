@@ -15,3 +15,7 @@ final contentRepositoryProvider = Provider<ContentRepository>((ref) {
 final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
   return DriftProgressRepository(ref.watch(databaseProvider));
 });
+
+final checkInRepositoryProvider = Provider<CheckInRepository>((ref) {
+  return DriftCheckInRepository(ref.watch(databaseProvider));
+});

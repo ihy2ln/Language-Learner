@@ -193,4 +193,34 @@ void main() {
     expect(progress.lapses, 1);
     expect(progress.reps, 3);
   });
+
+  test('check-ins round-trip and upsert idempotently per calendar day',
+      () async {
+    await db.into(db.languages).insert(
+          LanguagesCompanion.insert(
+            code: 'es-419',
+            name: 'Spanish',
+            nativeName: 'Español',
+            tier: Tier.tier1Full,
+            script: Script.latin,
+          ),
+        );
+
+    await db.into(db.checkIns).insertOnConflictUpdate(
+          CheckInsCompanion.insert(languageCode: 'es-419', date: '2026-08-20'),
+        );
+    // Checking in again on the same day must not create a second row.
+    await db.into(db.checkIns).insertOnConflictUpdate(
+          CheckInsCompanion.insert(languageCode: 'es-419', date: '2026-08-20'),
+        );
+    await db.into(db.checkIns).insertOnConflictUpdate(
+          CheckInsCompanion.insert(languageCode: 'es-419', date: '2026-08-19'),
+        );
+
+    final rows = await (db.select(db.checkIns)
+          ..where((t) => t.languageCode.equals('es-419')))
+        .get();
+
+    expect(rows.map((r) => r.date).toSet(), {'2026-08-20', '2026-08-19'});
+  });
 }

@@ -9,6 +9,7 @@ import '../../domain/entities/cefr.dart';
 import '../../domain/entities/item_type.dart';
 import '../../domain/entities/script.dart';
 import '../../domain/entities/tier.dart';
+import 'tables/check_ins_table.dart';
 import 'tables/content_bundles_table.dart';
 import 'tables/grammar_note_examples_table.dart';
 import 'tables/grammar_notes_table.dart';
@@ -32,12 +33,23 @@ part 'database.g.dart';
   Items,
   ItemTags,
   UserProgressTable,
+  CheckIns,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.createTable(checkIns);
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {
