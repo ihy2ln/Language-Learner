@@ -29,13 +29,16 @@ void main() {
           AppDatabase(NativeDatabase.memory()),
         ),
       ],
-      child: const MaterialApp(home: ReviewHomeScreen()),
+      child: const MaterialApp(
+        home: ReviewHomeScreen(languageCode: 'es-419'),
+      ),
     );
   }
 
   testWidgets('home screen shows the seeded language and a start button',
       (tester) async {
     await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
 
     expect(find.text('Español'), findsOneWidget);
     expect(find.text('Greetings and introductions · A1'), findsOneWidget);
@@ -45,6 +48,7 @@ void main() {
   testWidgets('starting a review shows the first seeded item, target first',
       (tester) async {
     await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
 
@@ -59,6 +63,7 @@ void main() {
   testWidgets('revealing shows the native gloss and grade buttons',
       (tester) async {
     await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
 
@@ -80,6 +85,7 @@ void main() {
 
   testWidgets('grading advances to the next card, unrevealed', (tester) async {
     await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
 
@@ -98,6 +104,7 @@ void main() {
       'working through all 12 seeded items reaches the completion screen',
       (tester) async {
     await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
 
@@ -119,6 +126,7 @@ void main() {
   testWidgets('Done on the completion screen returns to the home screen',
       (tester) async {
     await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
 

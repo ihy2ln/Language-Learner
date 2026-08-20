@@ -13,7 +13,9 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: ReviewHomeScreen(),
+      // Spanish until the language picker (features/languages/) replaces
+      // this as the app's entry point.
+      home: ReviewHomeScreen(languageCode: 'es-419'),
     );
   }
 }

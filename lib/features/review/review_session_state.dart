@@ -11,6 +11,8 @@ class ReviewSessionState {
     required this.currentIndex,
     required this.revealed,
     required this.reviewedCount,
+    required this.correctCount,
+    required this.isPlacementTest,
   });
 
   final Language language;
@@ -19,6 +21,14 @@ class ReviewSessionState {
   final int currentIndex;
   final bool revealed;
   final int reviewedCount;
+
+  /// Graded Good or Easy — used for the placement-test score.
+  final int correctCount;
+
+  /// True when this session was built with no prior progress for the
+  /// language at all, i.e. it's the learner's first-ever session — see
+  /// ReviewSessionController.build for how this is detected.
+  final bool isPlacementTest;
 
   bool get isFinished => currentIndex >= entries.length;
 
@@ -34,6 +44,7 @@ class ReviewSessionState {
     int? currentIndex,
     bool? revealed,
     int? reviewedCount,
+    int? correctCount,
   }) {
     return ReviewSessionState(
       language: language,
@@ -42,6 +53,8 @@ class ReviewSessionState {
       currentIndex: currentIndex ?? this.currentIndex,
       revealed: revealed ?? this.revealed,
       reviewedCount: reviewedCount ?? this.reviewedCount,
+      correctCount: correctCount ?? this.correctCount,
+      isPlacementTest: isPlacementTest,
     );
   }
 }

@@ -8,17 +8,16 @@ import '../../domain/scheduler/scheduler.dart';
 import '../../domain/session/session.dart';
 import 'review_session_state.dart';
 
-/// Hardcoded to the one seeded language/unit for this vertical slice —
-/// there is no language picker yet (deliberately: "one language, working
-/// completely" before the list grows).
-const _languageCode = 'es-419';
-
-class ReviewSessionController extends AsyncNotifier<ReviewSessionState> {
+class ReviewSessionController
+    extends FamilyAsyncNotifier<ReviewSessionState, String> {
   final FsrsScheduler _scheduler = const FsrsScheduler();
   late final ProgressRepository _progressRepository;
+  late final String _languageCode;
 
   @override
-  Future<ReviewSessionState> build() async {
+  Future<ReviewSessionState> build(String languageCode) async {
+    _languageCode = languageCode;
+
     final db = ref.watch(databaseProvider);
     await ensureSeedContent(db);
 
@@ -26,21 +25,21 @@ class ReviewSessionController extends AsyncNotifier<ReviewSessionState> {
     final languageRepository = ref.watch(languageRepositoryProvider);
     final contentRepository = ref.watch(contentRepositoryProvider);
 
-    final language = (await languageRepository.getByCode(_languageCode))
+    final language = (await languageRepository.getByCode(languageCode))
         .when(ok: (l) => l, err: (e) => throw StateError(e.message));
 
-    final bundle = (await contentRepository.getBundle(_languageCode))
+    final bundle = (await contentRepository.getBundle(languageCode))
         .when(ok: (b) => b, err: (e) => throw StateError(e.message));
     final unit = bundle.units.single;
 
     final itemsById = {
       for (final itemId in unit.itemIds)
-        itemId: (await contentRepository.getItem(_languageCode, itemId))
+        itemId: (await contentRepository.getItem(languageCode, itemId))
             .when(ok: (item) => item, err: (e) => throw StateError(e.message)),
     };
 
     final progress = (await _progressRepository.getAllForLanguage(
-      _languageCode,
+      languageCode,
     ))
         .when(ok: (p) => p, err: (e) => throw StateError(e.message));
 
@@ -61,6 +60,12 @@ class ReviewSessionController extends AsyncNotifier<ReviewSessionState> {
       currentIndex: 0,
       revealed: false,
       reviewedCount: 0,
+      correctCount: 0,
+      // No prior progress at all means this is the learner's first-ever
+      // session for the language — SessionComposer naturally composes an
+      // all-new-item session in that case, which doubles as a placement
+      // test with no domain-layer changes.
+      isPlacementTest: progress.isEmpty,
     );
   }
 
@@ -88,15 +93,17 @@ class ReviewSessionController extends AsyncNotifier<ReviewSessionState> {
       await _progressRepository.save(_languageCode, updated);
     }
 
+    final isCorrect = grade == Grade.good || grade == Grade.easy;
     state = AsyncData(current.copyWith(
       currentIndex: current.currentIndex + 1,
       revealed: false,
       reviewedCount: current.reviewedCount + 1,
+      correctCount: current.correctCount + (isCorrect ? 1 : 0),
     ));
   }
 }
 
-final reviewSessionControllerProvider =
-    AsyncNotifierProvider<ReviewSessionController, ReviewSessionState>(
+final reviewSessionControllerProvider = AsyncNotifierProvider.family<
+    ReviewSessionController, ReviewSessionState, String>(
   ReviewSessionController.new,
 );

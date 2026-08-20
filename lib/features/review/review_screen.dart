@@ -10,11 +10,14 @@ import 'review_session_state.dart';
 /// the entry's available exercise types (Recall would prompt the other
 /// way), which is a real simplification, not an oversight.
 class ReviewScreen extends ConsumerWidget {
-  const ReviewScreen({super.key});
+  const ReviewScreen({super.key, required this.languageCode});
+
+  final String languageCode;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final sessionAsync = ref.watch(reviewSessionControllerProvider);
+    final sessionAsync =
+        ref.watch(reviewSessionControllerProvider(languageCode));
 
     return Scaffold(
       appBar: AppBar(title: const Text('Review')),
@@ -31,7 +34,7 @@ class ReviewScreen extends ConsumerWidget {
           if (session.isFinished) {
             return _SessionComplete(reviewedCount: session.reviewedCount);
           }
-          return _Flashcard(session: session);
+          return _Flashcard(languageCode: languageCode, session: session);
         },
       ),
     );
@@ -68,14 +71,16 @@ class _SessionComplete extends StatelessWidget {
 }
 
 class _Flashcard extends ConsumerWidget {
-  const _Flashcard({required this.session});
+  const _Flashcard({required this.languageCode, required this.session});
 
+  final String languageCode;
   final ReviewSessionState session;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final item = session.currentItem;
-    final controller = ref.read(reviewSessionControllerProvider.notifier);
+    final controller =
+        ref.read(reviewSessionControllerProvider(languageCode).notifier);
 
     return Padding(
       padding: const EdgeInsets.all(24),
