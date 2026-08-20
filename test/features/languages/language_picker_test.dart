@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linguaforge/data/db/database.dart';
 import 'package:linguaforge/data/db/database_provider.dart';
+import 'package:linguaforge/features/languages/language_home_screen.dart';
 import 'package:linguaforge/features/languages/language_picker_screen.dart';
-import 'package:linguaforge/features/review/review_home_screen.dart';
 
 void main() {
   setUpAll(() {
@@ -34,7 +34,7 @@ void main() {
     expect(find.byKey(const Key('language-tile-aig')), findsOneWidget);
   });
 
-  testWidgets('a language with curated content opens its review home screen',
+  testWidgets('a language with curated content opens its language home screen',
       (tester) async {
     await tester.pumpWidget(appUnderTest());
     await tester.pumpAndSettle();
@@ -42,7 +42,7 @@ void main() {
     await tester.tap(find.byKey(const Key('language-tile-ja')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ReviewHomeScreen), findsOneWidget);
+    expect(find.byType(LanguageHomeScreen), findsOneWidget);
     expect(find.text('日本語'), findsOneWidget);
   });
 
@@ -56,6 +56,6 @@ void main() {
     await tester.tap(find.byKey(const Key('language-tile-aig')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ReviewHomeScreen), findsNothing);
+    expect(find.byType(LanguageHomeScreen), findsNothing);
   });
 }

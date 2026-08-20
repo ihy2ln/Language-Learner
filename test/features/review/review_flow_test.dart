@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:linguaforge/data/db/database.dart';
 import 'package:linguaforge/data/db/database_provider.dart';
-import 'package:linguaforge/features/review/review_home_screen.dart';
+import 'package:linguaforge/features/languages/language_home_screen.dart';
 
 /// End-to-end widget coverage of the one real user flow this build has:
 /// open the app, start a review session for the seeded Spanish unit, work
@@ -30,7 +30,7 @@ void main() {
         ),
       ],
       child: const MaterialApp(
-        home: ReviewHomeScreen(languageCode: 'es-419'),
+        home: LanguageHomeScreen(languageCode: 'es-419'),
       ),
     );
   }

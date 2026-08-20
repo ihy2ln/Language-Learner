@@ -5,7 +5,7 @@ import '../../data/content/seed_loader.dart';
 import '../../data/db/database_provider.dart';
 import '../../data/repositories/repository_providers.dart';
 import '../../domain/entities/entities.dart';
-import '../review/review_home_screen.dart';
+import 'language_home_screen.dart';
 
 final languageListProvider = FutureProvider<List<Language>>((ref) async {
   await ensureSeedContent(ref.watch(databaseProvider));
@@ -55,7 +55,7 @@ class LanguagePickerScreen extends ConsumerWidget {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) =>
-                              ReviewHomeScreen(languageCode: language.code),
+                              LanguageHomeScreen(languageCode: language.code),
                         ),
                       );
                     },
