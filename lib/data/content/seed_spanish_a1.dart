@@ -107,15 +107,16 @@ Language spanishLanguage() {
     nativeName: 'Español',
     tier: Tier.tier1Full,
     hasCuratedContent: true,
-    // Neither is wired up yet (device TTS / Azure scoring are later
-    // milestones) — false here is honest, not a placeholder, per
-    // CLAUDE.md hard rule #6: capability is read from data.
-    hasTts: false,
+    // Device TTS is wired up (providers/speech); ASR/pronunciation scoring
+    // are not — false there is honest, not a placeholder, per CLAUDE.md
+    // hard rule #6: capability is read from data.
+    hasTts: true,
     hasAsr: false,
     hasPronunciationScoring: false,
     llmCorpusConstrained: false,
     script: Script.latin,
     rtl: false,
+    ttsVoiceHint: 'es-MX',
   );
 }
 

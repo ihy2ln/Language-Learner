@@ -1,14 +1,43 @@
 import 'package:drift/drift.dart';
 
+import '../../domain/entities/entities.dart';
 import '../db/database.dart';
+import 'seed_antiguan.dart';
+import 'seed_english_a1.dart';
+import 'seed_japanese_a1.dart';
 import 'seed_spanish_a1.dart';
 
-/// Ensures the Spanish A1 greetings seed content exists in [db].
-/// Idempotent — safe to call on every app start. Stands in for the real
-/// content-bundle download pipeline (CONTENT-AUTHORING.md), which is out
-/// of scope here.
+/// Ensures every seeded language exists in [db]. Idempotent — safe to
+/// call on every app start. Stands in for the real content-bundle
+/// download pipeline (CONTENT-AUTHORING.md), which is out of scope here.
 Future<void> ensureSeedContent(AppDatabase db) async {
-  final language = spanishLanguage();
+  await _seedLanguageWithContent(
+    db,
+    language: spanishLanguage(),
+    bundle: spanishA1GreetingsBundle(),
+    unit: spanishA1GreetingsUnit(),
+    items: spanishA1GreetingsItems,
+  );
+  await _seedLanguageWithContent(
+    db,
+    language: englishLanguage(),
+    bundle: englishA1GreetingsBundle(),
+    unit: englishA1GreetingsUnit(),
+    items: englishA1GreetingsItems,
+  );
+  await _seedLanguageWithContent(
+    db,
+    language: japaneseLanguage(),
+    bundle: japaneseA1GreetingsBundle(),
+    unit: japaneseA1GreetingsUnit(),
+    items: japaneseA1GreetingsItems,
+  );
+  // Antiguan Creole has no authored content yet — see seed_antiguan.dart.
+  // Only the language record is seeded, no bundle/unit/items.
+  await _upsertLanguage(db, antiguanLanguage());
+}
+
+Future<void> _upsertLanguage(AppDatabase db, Language language) async {
   await db.into(db.languages).insertOnConflictUpdate(
         LanguagesCompanion.insert(
           code: language.code,
@@ -22,10 +51,20 @@ Future<void> ensureSeedContent(AppDatabase db) async {
           hasPronunciationScoring: Value(language.hasPronunciationScoring),
           llmCorpusConstrained: Value(language.llmCorpusConstrained),
           rtl: Value(language.rtl),
+          ttsVoiceHint: Value(language.ttsVoiceHint),
         ),
       );
+}
 
-  final bundle = spanishA1GreetingsBundle();
+Future<void> _seedLanguageWithContent(
+  AppDatabase db, {
+  required Language language,
+  required ContentBundle bundle,
+  required Unit unit,
+  required List<Item> items,
+}) async {
+  await _upsertLanguage(db, language);
+
   await db.into(db.contentBundles).insertOnConflictUpdate(
         ContentBundlesCompanion.insert(
           languageCode: bundle.languageCode,
@@ -35,7 +74,6 @@ Future<void> ensureSeedContent(AppDatabase db) async {
         ),
       );
 
-  final unit = bundle.units.single;
   await db.into(db.units).insertOnConflictUpdate(
         UnitsCompanion.insert(
           id: unit.id,
@@ -46,7 +84,6 @@ Future<void> ensureSeedContent(AppDatabase db) async {
         ),
       );
 
-  final items = spanishA1GreetingsItems;
   for (var i = 0; i < items.length; i++) {
     final item = items[i];
     await db.into(db.items).insertOnConflictUpdate(
@@ -66,7 +103,8 @@ Future<void> ensureSeedContent(AppDatabase db) async {
           ),
         );
 
-    await (db.delete(db.itemTags)..where((t) => t.itemId.equals(item.id))).go();
+    await (db.delete(db.itemTags)..where((t) => t.itemId.equals(item.id)))
+        .go();
     if (item.tags.isNotEmpty) {
       await db.batch((batch) {
         batch.insertAll(db.itemTags, [
