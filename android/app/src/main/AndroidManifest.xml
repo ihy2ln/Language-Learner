@@ -41,5 +41,12 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- Required for flutter_tts to find the system TTS engine on
+             Android 11+ (package visibility) — without this, DeviceTtsAdapter
+             silently fails to speak on real devices even though it works
+             fine in tests. -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
     </queries>
 </manifest>
