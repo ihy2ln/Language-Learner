@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/placement/placement_result.dart';
 import '../../domain/scheduler/grade.dart';
+import '../../providers/speech/speech_providers.dart';
 import 'review_session_controller.dart';
 import 'review_session_state.dart';
 
@@ -32,7 +34,9 @@ class ReviewScreen extends ConsumerWidget {
         ),
         data: (session) {
           if (session.isFinished) {
-            return _SessionComplete(reviewedCount: session.reviewedCount);
+            return session.isPlacementTest
+                ? _PlacementResults(session: session)
+                : _SessionComplete(reviewedCount: session.reviewedCount);
           }
           return _Flashcard(languageCode: languageCode, session: session);
         },
@@ -70,6 +74,66 @@ class _SessionComplete extends StatelessWidget {
   }
 }
 
+class _PlacementResults extends StatelessWidget {
+  const _PlacementResults({required this.session});
+
+  final ReviewSessionState session;
+
+  @override
+  Widget build(BuildContext context) {
+    final result = computePlacementResult(
+      correctCount: session.correctCount,
+      totalCount: session.reviewedCount,
+    );
+    final bandLabel = switch (result.band) {
+      PlacementBand.beginner => 'Beginner — just getting started',
+      PlacementBand.developing => 'Developing — you know some of this',
+      PlacementBand.confident => 'Confident — you know most of this',
+    };
+
+    return Center(
+      key: const Key('placement-results'),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.flag_circle, size: 48, color: Colors.blue),
+            const SizedBox(height: 16),
+            const Text(
+              'Placement test complete',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '${session.correctCount} / ${session.reviewedCount} correct',
+              key: const Key('placement-score'),
+              style: const TextStyle(fontSize: 18),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              bandLabel,
+              key: const Key('placement-band'),
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              result.planSummary,
+              key: const Key('placement-plan'),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Done'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _Flashcard extends ConsumerWidget {
   const _Flashcard({required this.languageCode, required this.session});
 
@@ -81,6 +145,7 @@ class _Flashcard extends ConsumerWidget {
     final item = session.currentItem;
     final controller =
         ref.read(reviewSessionControllerProvider(languageCode).notifier);
+    final language = session.language;
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -100,6 +165,23 @@ class _Flashcard extends ConsumerWidget {
               style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
+            // Capability is read from data (CLAUDE.md hard rule #6) — no
+            // TTS button at all for a language with hasTts: false, not a
+            // disabled one.
+            if (language.hasTts) ...[
+              const SizedBox(height: 4),
+              IconButton(
+                key: const Key('tts-button'),
+                icon: const Icon(Icons.volume_up),
+                tooltip: 'Play pronunciation',
+                onPressed: () {
+                  ref.read(ttsAdapterProvider).speak(
+                        item.target,
+                        voiceHint: language.ttsVoiceHint ?? language.code,
+                      );
+                },
+              ),
+            ],
             if (session.revealed) ...[
               const SizedBox(height: 16),
               Text(

@@ -6,12 +6,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:linguaforge/data/db/database.dart';
 import 'package:linguaforge/data/db/database_provider.dart';
 import 'package:linguaforge/features/languages/language_home_screen.dart';
+import 'package:linguaforge/providers/speech/speech_providers.dart';
 
-/// End-to-end widget coverage of the one real user flow this build has:
-/// open the app, start a review session for the seeded Spanish unit, work
-/// through every card, and land on a completion screen. This is the
-/// substitute for manually tapping through the app on a device — this
-/// sandbox has no Android SDK/emulator to do that with.
+import '../../providers/speech/fake_tts_adapter.dart';
+
+/// End-to-end widget coverage of the Spanish review flow: open the app,
+/// start a session for the seeded unit, work through every card, and land
+/// on a completion screen (the placement-results screen, since a fresh
+/// database has no prior progress). This is the substitute for manually
+/// tapping through the app on a device — this sandbox has no Android
+/// SDK/emulator to do that with.
 void main() {
   // Each test opens its own AppDatabase(NativeDatabase.memory()) for
   // isolation, which is exactly the pattern Drift warns about (it assumes
@@ -101,30 +105,31 @@ void main() {
   });
 
   testWidgets(
-      'working through all 12 seeded items reaches the completion screen',
-      (tester) async {
+      'working through all 12 seeded items on a fresh language reaches the '
+      'placement results screen', (tester) async {
     await tester.pumpWidget(appUnderTest());
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
 
     for (var i = 0; i < 12; i++) {
-      expect(find.byKey(const Key('session-complete')), findsNothing);
+      expect(find.byKey(const Key('placement-results')), findsNothing);
       await tester.tap(find.byKey(const Key('reveal-button')));
       await tester.pump();
       await tester.tap(find.byKey(const Key('grade-good')));
       await tester.pumpAndSettle();
     }
 
-    expect(find.byKey(const Key('session-complete')), findsOneWidget);
+    expect(find.byKey(const Key('placement-results')), findsOneWidget);
+    expect(find.text('12 / 12 correct'), findsOneWidget);
     expect(
-      find.text('Session complete — reviewed 12 item(s).'),
+      find.text('Confident — you know most of this'),
       findsOneWidget,
     );
   });
 
-  testWidgets('Done on the completion screen returns to the home screen',
-      (tester) async {
+  testWidgets('Done on the placement results screen returns to the home '
+      'screen', (tester) async {
     await tester.pumpWidget(appUnderTest());
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('start-review-button')));
@@ -141,5 +146,39 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('start-review-button')), findsOneWidget);
+  });
+
+  testWidgets('a language with TTS shows a pronunciation button on the card',
+      (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-review-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('tts-button')), findsOneWidget);
+  });
+
+  testWidgets('tapping the pronunciation button speaks the target word',
+      (tester) async {
+    final fakeTts = FakeTtsAdapter();
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        databaseProvider.overrideWithValue(
+          AppDatabase(NativeDatabase.memory()),
+        ),
+        ttsAdapterProvider.overrideWithValue(fakeTts),
+      ],
+      child: const MaterialApp(
+        home: LanguageHomeScreen(languageCode: 'es-419'),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('start-review-button')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('tts-button')));
+    await tester.pump();
+
+    expect(fakeTts.spokenCalls, [(text: 'buenos días', voiceHint: 'es-MX')]);
   });
 }
