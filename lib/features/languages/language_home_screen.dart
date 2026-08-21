@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../data/content/fun_facts.dart';
 import '../../data/content/seed_loader.dart';
 import '../../data/db/database_provider.dart';
 import '../../data/repositories/repository_providers.dart';
@@ -191,6 +192,7 @@ class _DashboardBody extends ConsumerWidget {
               ],
             ),
           ),
+        _FunFactCard(languageCode: language.code),
         const SizedBox(height: 28),
         FilledButton(
           key: const Key('start-review-button'),
@@ -214,6 +216,37 @@ class _DashboardBody extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FunFactCard extends StatelessWidget {
+  const _FunFactCard({required this.languageCode});
+
+  final String languageCode;
+
+  @override
+  Widget build(BuildContext context) {
+    final fact = factOfTheDay(funFactsFor(languageCode), DateTime.now());
+    if (fact == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.lightbulb_outline),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(fact, key: const Key('fun-fact-text')),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

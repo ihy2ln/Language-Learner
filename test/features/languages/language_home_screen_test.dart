@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:linguaforge/data/content/fun_facts.dart';
 import 'package:linguaforge/data/db/database.dart';
 import 'package:linguaforge/data/db/database_provider.dart';
 import 'package:linguaforge/features/languages/language_home_screen.dart';
@@ -69,5 +70,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Continue review'), findsOneWidget);
+  });
+
+  testWidgets('shows today\'s fun fact for the language', (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+
+    final expected = factOfTheDay(funFactsFor('es-419'), DateTime.now());
+    expect(find.byKey(const Key('fun-fact-text')), findsOneWidget);
+    expect(find.text(expected!), findsOneWidget);
   });
 }
