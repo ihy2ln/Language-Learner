@@ -8,6 +8,7 @@ import '../../data/repositories/repository_providers.dart';
 import '../../domain/checkin/streak.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/goals/daily_goal.dart';
+import '../quiz/quiz_screen.dart';
 import '../review/review_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -214,6 +215,18 @@ class _DashboardBody extends ConsumerWidget {
                 ? 'Continue review'
                 : 'Take placement test',
           ),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton(
+          key: const Key('start-quiz-button'),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => QuizScreen(languageCode: languageCode),
+              ),
+            );
+          },
+          child: const Text('Take a quiz'),
         ),
       ],
     );

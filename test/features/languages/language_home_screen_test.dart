@@ -80,4 +80,14 @@ void main() {
     expect(find.byKey(const Key('fun-fact-text')), findsOneWidget);
     expect(find.text(expected!), findsOneWidget);
   });
+
+  testWidgets('Take a quiz opens the quiz screen', (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('start-quiz-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Question 1 / 8'), findsOneWidget);
+  });
 }
