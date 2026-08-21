@@ -19,6 +19,7 @@ class Item {
     this.pitchAccent,
     this.tags = const [],
     this.note,
+    this.acceptedAnswers = const [],
   });
 
   final String id;
@@ -29,6 +30,17 @@ class Item {
 
   /// Learner-language gloss.
   final String native;
+
+  /// Other typed-answer spellings/phrasings that count as correct for this
+  /// item (e.g. "hi" and "hello" both glossing the same target word).
+  /// Usually left empty — [answerVariants] falls back to [native] alone,
+  /// so authoring this is opt-in, not required for every item.
+  final List<String> acceptedAnswers;
+
+  /// What a typed answer is actually checked against — [acceptedAnswers]
+  /// when authored, otherwise just [native].
+  List<String> get answerVariants =>
+      acceptedAnswers.isEmpty ? [native] : acceptedAnswers;
 
   /// Asset or downloaded file path, relative to the bundle root.
   final String? audioRef;

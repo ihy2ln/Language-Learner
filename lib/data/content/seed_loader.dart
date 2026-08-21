@@ -113,5 +113,20 @@ Future<void> _seedLanguageWithContent(
         ]);
       });
     }
+
+    await (db.delete(db.itemAcceptedAnswers)
+          ..where((t) => t.itemId.equals(item.id)))
+        .go();
+    if (item.acceptedAnswers.isNotEmpty) {
+      await db.batch((batch) {
+        batch.insertAll(db.itemAcceptedAnswers, [
+          for (final answer in item.acceptedAnswers)
+            ItemAcceptedAnswersCompanion.insert(
+              itemId: item.id,
+              answer: answer,
+            ),
+        ]);
+      });
+    }
   }
 }

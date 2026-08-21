@@ -38,6 +38,10 @@ final List<Item> spanishA1GreetingsItems = [
     type: ItemType.vocab,
     target: 'hola',
     native: 'hi',
+    // "hi" and "hello" are both correct typed answers for the same word —
+    // this is the pattern content authoring uses when one target word
+    // doesn't map to a single fixed gloss.
+    acceptedAnswers: ['hi', 'hello'],
     tags: ['dialect-universal', 'register-neutral'],
   ),
   const Item(
@@ -59,6 +63,7 @@ final List<Item> spanishA1GreetingsItems = [
     type: ItemType.vocab,
     target: 'gracias',
     native: 'thank you',
+    acceptedAnswers: ['thank you', 'thanks'],
     tags: ['dialect-universal', 'register-neutral'],
   ),
   const Item(

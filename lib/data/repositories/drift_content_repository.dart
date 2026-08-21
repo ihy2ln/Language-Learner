@@ -125,6 +125,9 @@ class DriftContentRepository implements ContentRepository {
     final tagRows = await (_db.select(_db.itemTags)
           ..where((t) => t.itemId.equals(row.id)))
         .get();
+    final acceptedAnswerRows = await (_db.select(_db.itemAcceptedAnswers)
+          ..where((t) => t.itemId.equals(row.id)))
+        .get();
     return Item(
       id: row.id,
       type: row.type,
@@ -137,6 +140,7 @@ class DriftContentRepository implements ContentRepository {
       pitchAccent: row.pitchAccent,
       tags: [for (final tagRow in tagRows) tagRow.tag],
       note: row.note,
+      acceptedAnswers: [for (final a in acceptedAnswerRows) a.answer],
     );
   }
 }

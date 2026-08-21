@@ -3212,6 +3212,203 @@ class CheckInsCompanion extends UpdateCompanion<CheckInRow> {
   }
 }
 
+class $ItemAcceptedAnswersTable extends ItemAcceptedAnswers
+    with TableInfo<$ItemAcceptedAnswersTable, ItemAcceptedAnswerRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ItemAcceptedAnswersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+      'item_id', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES items (id)'));
+  static const VerificationMeta _answerMeta = const VerificationMeta('answer');
+  @override
+  late final GeneratedColumn<String> answer = GeneratedColumn<String>(
+      'answer', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [itemId, answer];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'item_accepted_answers';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ItemAcceptedAnswerRow> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('item_id')) {
+      context.handle(_itemIdMeta,
+          itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('answer')) {
+      context.handle(_answerMeta,
+          answer.isAcceptableOrUnknown(data['answer']!, _answerMeta));
+    } else if (isInserting) {
+      context.missing(_answerMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {itemId, answer};
+  @override
+  ItemAcceptedAnswerRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ItemAcceptedAnswerRow(
+      itemId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}item_id'])!,
+      answer: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}answer'])!,
+    );
+  }
+
+  @override
+  $ItemAcceptedAnswersTable createAlias(String alias) {
+    return $ItemAcceptedAnswersTable(attachedDatabase, alias);
+  }
+}
+
+class ItemAcceptedAnswerRow extends DataClass
+    implements Insertable<ItemAcceptedAnswerRow> {
+  final String itemId;
+  final String answer;
+  const ItemAcceptedAnswerRow({required this.itemId, required this.answer});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['item_id'] = Variable<String>(itemId);
+    map['answer'] = Variable<String>(answer);
+    return map;
+  }
+
+  ItemAcceptedAnswersCompanion toCompanion(bool nullToAbsent) {
+    return ItemAcceptedAnswersCompanion(
+      itemId: Value(itemId),
+      answer: Value(answer),
+    );
+  }
+
+  factory ItemAcceptedAnswerRow.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ItemAcceptedAnswerRow(
+      itemId: serializer.fromJson<String>(json['itemId']),
+      answer: serializer.fromJson<String>(json['answer']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'itemId': serializer.toJson<String>(itemId),
+      'answer': serializer.toJson<String>(answer),
+    };
+  }
+
+  ItemAcceptedAnswerRow copyWith({String? itemId, String? answer}) =>
+      ItemAcceptedAnswerRow(
+        itemId: itemId ?? this.itemId,
+        answer: answer ?? this.answer,
+      );
+  ItemAcceptedAnswerRow copyWithCompanion(ItemAcceptedAnswersCompanion data) {
+    return ItemAcceptedAnswerRow(
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      answer: data.answer.present ? data.answer.value : this.answer,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemAcceptedAnswerRow(')
+          ..write('itemId: $itemId, ')
+          ..write('answer: $answer')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(itemId, answer);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ItemAcceptedAnswerRow &&
+          other.itemId == this.itemId &&
+          other.answer == this.answer);
+}
+
+class ItemAcceptedAnswersCompanion
+    extends UpdateCompanion<ItemAcceptedAnswerRow> {
+  final Value<String> itemId;
+  final Value<String> answer;
+  final Value<int> rowid;
+  const ItemAcceptedAnswersCompanion({
+    this.itemId = const Value.absent(),
+    this.answer = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ItemAcceptedAnswersCompanion.insert({
+    required String itemId,
+    required String answer,
+    this.rowid = const Value.absent(),
+  })  : itemId = Value(itemId),
+        answer = Value(answer);
+  static Insertable<ItemAcceptedAnswerRow> custom({
+    Expression<String>? itemId,
+    Expression<String>? answer,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (itemId != null) 'item_id': itemId,
+      if (answer != null) 'answer': answer,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ItemAcceptedAnswersCompanion copyWith(
+      {Value<String>? itemId, Value<String>? answer, Value<int>? rowid}) {
+    return ItemAcceptedAnswersCompanion(
+      itemId: itemId ?? this.itemId,
+      answer: answer ?? this.answer,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (answer.present) {
+      map['answer'] = Variable<String>(answer.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ItemAcceptedAnswersCompanion(')
+          ..write('itemId: $itemId, ')
+          ..write('answer: $answer, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3226,6 +3423,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $UserProgressTableTable userProgressTable =
       $UserProgressTableTable(this);
   late final $CheckInsTable checkIns = $CheckInsTable(this);
+  late final $ItemAcceptedAnswersTable itemAcceptedAnswers =
+      $ItemAcceptedAnswersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3239,7 +3438,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         grammarNoteExamples,
         itemTags,
         userProgressTable,
-        checkIns
+        checkIns,
+        itemAcceptedAnswers
       ];
 }
 
@@ -4799,6 +4999,23 @@ final class $$ItemsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$ItemAcceptedAnswersTable,
+      List<ItemAcceptedAnswerRow>> _itemAcceptedAnswersRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.itemAcceptedAnswers,
+          aliasName: 'items__id__item_accepted_answers__item_id');
+
+  $$ItemAcceptedAnswersTableProcessedTableManager get itemAcceptedAnswersRefs {
+    final manager =
+        $$ItemAcceptedAnswersTableTableManager($_db, $_db.itemAcceptedAnswers)
+            .filter((f) => f.itemId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_itemAcceptedAnswersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
@@ -4919,6 +5136,27 @@ class $$ItemsTableFilterComposer extends Composer<_$AppDatabase, $ItemsTable> {
             $$UserProgressTableTableFilterComposer(
               $db: $db,
               $table: $db.userProgressTable,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> itemAcceptedAnswersRefs(
+      Expression<bool> Function($$ItemAcceptedAnswersTableFilterComposer f) f) {
+    final $$ItemAcceptedAnswersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.id,
+        referencedTable: $db.itemAcceptedAnswers,
+        getReferencedColumn: (t) => t.itemId,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ItemAcceptedAnswersTableFilterComposer(
+              $db: $db,
+              $table: $db.itemAcceptedAnswers,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -5118,6 +5356,29 @@ class $$ItemsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> itemAcceptedAnswersRefs<T extends Object>(
+      Expression<T> Function($$ItemAcceptedAnswersTableAnnotationComposer a)
+          f) {
+    final $$ItemAcceptedAnswersTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.id,
+            referencedTable: $db.itemAcceptedAnswers,
+            getReferencedColumn: (t) => t.itemId,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ItemAcceptedAnswersTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.itemAcceptedAnswers,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$ItemsTableTableManager extends RootTableManager<
@@ -5135,7 +5396,8 @@ class $$ItemsTableTableManager extends RootTableManager<
         {bool unitId,
         bool grammarNoteExamplesRefs,
         bool itemTagsRefs,
-        bool userProgressTableRefs})> {
+        bool userProgressTableRefs,
+        bool itemAcceptedAnswersRefs})> {
   $$ItemsTableTableManager(_$AppDatabase db, $ItemsTable table)
       : super(TableManagerState(
           db: db,
@@ -5214,13 +5476,15 @@ class $$ItemsTableTableManager extends RootTableManager<
               {unitId = false,
               grammarNoteExamplesRefs = false,
               itemTagsRefs = false,
-              userProgressTableRefs = false}) {
+              userProgressTableRefs = false,
+              itemAcceptedAnswersRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (grammarNoteExamplesRefs) db.grammarNoteExamples,
                 if (itemTagsRefs) db.itemTags,
-                if (userProgressTableRefs) db.userProgressTable
+                if (userProgressTableRefs) db.userProgressTable,
+                if (itemAcceptedAnswersRefs) db.itemAcceptedAnswers
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -5285,6 +5549,19 @@ class $$ItemsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem: (item,
                                 referencedItems) =>
                             referencedItems.where((e) => e.itemId == item.id),
+                        typedResults: items),
+                  if (itemAcceptedAnswersRefs)
+                    await $_getPrefetchedData<ItemRow, $ItemsTable,
+                            ItemAcceptedAnswerRow>(
+                        currentTable: table,
+                        referencedTable: $$ItemsTableReferences
+                            ._itemAcceptedAnswersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ItemsTableReferences(db, table, p0)
+                                .itemAcceptedAnswersRefs,
+                        referencedItemsForCurrentItem: (item,
+                                referencedItems) =>
+                            referencedItems.where((e) => e.itemId == item.id),
                         typedResults: items)
                 ];
               },
@@ -5308,7 +5585,8 @@ typedef $$ItemsTableProcessedTableManager = ProcessedTableManager<
         {bool unitId,
         bool grammarNoteExamplesRefs,
         bool itemTagsRefs,
-        bool userProgressTableRefs})>;
+        bool userProgressTableRefs,
+        bool itemAcceptedAnswersRefs})>;
 typedef $$GrammarNoteExamplesTableCreateCompanionBuilder
     = GrammarNoteExamplesCompanion Function({
   required String noteId,
@@ -6481,6 +6759,240 @@ typedef $$CheckInsTableProcessedTableManager = ProcessedTableManager<
     (CheckInRow, $$CheckInsTableReferences),
     CheckInRow,
     PrefetchHooks Function({bool languageCode})>;
+typedef $$ItemAcceptedAnswersTableCreateCompanionBuilder
+    = ItemAcceptedAnswersCompanion Function({
+  required String itemId,
+  required String answer,
+  Value<int> rowid,
+});
+typedef $$ItemAcceptedAnswersTableUpdateCompanionBuilder
+    = ItemAcceptedAnswersCompanion Function({
+  Value<String> itemId,
+  Value<String> answer,
+  Value<int> rowid,
+});
+
+final class $$ItemAcceptedAnswersTableReferences extends BaseReferences<
+    _$AppDatabase, $ItemAcceptedAnswersTable, ItemAcceptedAnswerRow> {
+  $$ItemAcceptedAnswersTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ItemsTable _itemIdTable(_$AppDatabase db) =>
+      db.items.createAlias('item_accepted_answers__item_id__items__id');
+
+  $$ItemsTableProcessedTableManager get itemId {
+    final $_column = $_itemColumn<String>('item_id')!;
+
+    final manager = $$ItemsTableTableManager($_db, $_db.items)
+        .filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_itemIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ItemAcceptedAnswersTableFilterComposer
+    extends Composer<_$AppDatabase, $ItemAcceptedAnswersTable> {
+  $$ItemAcceptedAnswersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get answer => $composableBuilder(
+      column: $table.answer, builder: (column) => ColumnFilters(column));
+
+  $$ItemsTableFilterComposer get itemId {
+    final $$ItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.itemId,
+        referencedTable: $db.items,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.items,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ItemAcceptedAnswersTableOrderingComposer
+    extends Composer<_$AppDatabase, $ItemAcceptedAnswersTable> {
+  $$ItemAcceptedAnswersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get answer => $composableBuilder(
+      column: $table.answer, builder: (column) => ColumnOrderings(column));
+
+  $$ItemsTableOrderingComposer get itemId {
+    final $$ItemsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.itemId,
+        referencedTable: $db.items,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ItemsTableOrderingComposer(
+              $db: $db,
+              $table: $db.items,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ItemAcceptedAnswersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ItemAcceptedAnswersTable> {
+  $$ItemAcceptedAnswersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get answer =>
+      $composableBuilder(column: $table.answer, builder: (column) => column);
+
+  $$ItemsTableAnnotationComposer get itemId {
+    final $$ItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.itemId,
+        referencedTable: $db.items,
+        getReferencedColumn: (t) => t.id,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.items,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ItemAcceptedAnswersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ItemAcceptedAnswersTable,
+    ItemAcceptedAnswerRow,
+    $$ItemAcceptedAnswersTableFilterComposer,
+    $$ItemAcceptedAnswersTableOrderingComposer,
+    $$ItemAcceptedAnswersTableAnnotationComposer,
+    $$ItemAcceptedAnswersTableCreateCompanionBuilder,
+    $$ItemAcceptedAnswersTableUpdateCompanionBuilder,
+    (ItemAcceptedAnswerRow, $$ItemAcceptedAnswersTableReferences),
+    ItemAcceptedAnswerRow,
+    PrefetchHooks Function({bool itemId})> {
+  $$ItemAcceptedAnswersTableTableManager(
+      _$AppDatabase db, $ItemAcceptedAnswersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ItemAcceptedAnswersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ItemAcceptedAnswersTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ItemAcceptedAnswersTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> itemId = const Value.absent(),
+            Value<String> answer = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ItemAcceptedAnswersCompanion(
+            itemId: itemId,
+            answer: answer,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String itemId,
+            required String answer,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ItemAcceptedAnswersCompanion.insert(
+            itemId: itemId,
+            answer: answer,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ItemAcceptedAnswersTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({itemId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (itemId) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.itemId,
+                    referencedTable:
+                        $$ItemAcceptedAnswersTableReferences._itemIdTable(db),
+                    referencedColumn: $$ItemAcceptedAnswersTableReferences
+                        ._itemIdTable(db)
+                        .id,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ItemAcceptedAnswersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ItemAcceptedAnswersTable,
+    ItemAcceptedAnswerRow,
+    $$ItemAcceptedAnswersTableFilterComposer,
+    $$ItemAcceptedAnswersTableOrderingComposer,
+    $$ItemAcceptedAnswersTableAnnotationComposer,
+    $$ItemAcceptedAnswersTableCreateCompanionBuilder,
+    $$ItemAcceptedAnswersTableUpdateCompanionBuilder,
+    (ItemAcceptedAnswerRow, $$ItemAcceptedAnswersTableReferences),
+    ItemAcceptedAnswerRow,
+    PrefetchHooks Function({bool itemId})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6503,4 +7015,6 @@ class $AppDatabaseManager {
       $$UserProgressTableTableTableManager(_db, _db.userProgressTable);
   $$CheckInsTableTableManager get checkIns =>
       $$CheckInsTableTableManager(_db, _db.checkIns);
+  $$ItemAcceptedAnswersTableTableManager get itemAcceptedAnswers =>
+      $$ItemAcceptedAnswersTableTableManager(_db, _db.itemAcceptedAnswers);
 }

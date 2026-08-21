@@ -128,6 +128,63 @@ void main() {
         {'register-neutral', 'dialect-universal'});
   });
 
+  test('an item\'s accepted answers round-trip through the join table',
+      () async {
+    await db.into(db.languages).insert(
+          LanguagesCompanion.insert(
+            code: 'es-419',
+            name: 'Spanish',
+            nativeName: 'Español',
+            tier: Tier.tier1Full,
+            script: Script.latin,
+          ),
+        );
+    await db.into(db.contentBundles).insert(
+          ContentBundlesCompanion.insert(
+            languageCode: 'es-419',
+            schemaVersion: 1,
+            contentVersion: '2026.01',
+            checksum: 'abc',
+          ),
+        );
+    await db.into(db.units).insert(
+          UnitsCompanion.insert(
+            id: 'es-a1-01',
+            languageCode: 'es-419',
+            title: 'Greetings',
+            position: 0,
+          ),
+        );
+    await db.into(db.items).insert(
+          ItemsCompanion.insert(
+            id: 'es-a1-01-i004',
+            unitId: 'es-a1-01',
+            type: ItemType.vocab,
+            target: 'hola',
+            native: 'hi',
+            position: 0,
+          ),
+        );
+    await db.batch((batch) {
+      batch.insertAll(db.itemAcceptedAnswers, [
+        const ItemAcceptedAnswersCompanion(
+          itemId: Value('es-a1-01-i004'),
+          answer: Value('hi'),
+        ),
+        const ItemAcceptedAnswersCompanion(
+          itemId: Value('es-a1-01-i004'),
+          answer: Value('hello'),
+        ),
+      ]);
+    });
+
+    final answers = await (db.select(db.itemAcceptedAnswers)
+          ..where((t) => t.itemId.equals('es-a1-01-i004')))
+        .get();
+
+    expect(answers.map((a) => a.answer).toSet(), {'hi', 'hello'});
+  });
+
   test('user progress round-trips FSRS fields with real timestamps', () async {
     await db.into(db.languages).insert(
           LanguagesCompanion.insert(
