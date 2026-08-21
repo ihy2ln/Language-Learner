@@ -11,6 +11,7 @@ import '../../domain/goals/daily_goal.dart';
 import '../quiz/quiz_screen.dart';
 import '../review/review_screen.dart';
 import '../settings/settings_screen.dart';
+import '../speed_game/speed_game_screen.dart';
 
 class LanguageDashboard {
   const LanguageDashboard({
@@ -227,6 +228,18 @@ class _DashboardBody extends ConsumerWidget {
             );
           },
           child: const Text('Take a quiz'),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton(
+          key: const Key('start-speed-game-button'),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => SpeedGameScreen(languageCode: languageCode),
+              ),
+            );
+          },
+          child: const Text('Speed round'),
         ),
       ],
     );

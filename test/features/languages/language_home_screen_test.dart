@@ -90,4 +90,17 @@ void main() {
 
     expect(find.text('Question 1 / 8'), findsOneWidget);
   });
+
+  testWidgets('Speed round opens the speed game screen', (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('start-speed-game-button')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('60s'), findsOneWidget);
+    // Let the round finish so no Timer is left pending when the test ends.
+    await tester.pump(const Duration(seconds: 60));
+    await tester.pumpAndSettle();
+  });
 }
