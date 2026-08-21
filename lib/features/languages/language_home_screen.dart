@@ -8,6 +8,7 @@ import '../../data/repositories/repository_providers.dart';
 import '../../domain/checkin/streak.dart';
 import '../../domain/entities/entities.dart';
 import '../../domain/goals/daily_goal.dart';
+import '../matching_game/matching_game_screen.dart';
 import '../quiz/quiz_screen.dart';
 import '../review/review_screen.dart';
 import '../settings/settings_screen.dart';
@@ -51,9 +52,8 @@ final languageDashboardProvider =
 
   final progress = (await progressRepository.getAllForLanguage(languageCode))
       .when(ok: (p) => p, err: (e) => throw StateError(e.message));
-  final checkInDates =
-      (await checkInRepository.getCheckInDates(languageCode))
-          .when(ok: (d) => d, err: (e) => throw StateError(e.message));
+  final checkInDates = (await checkInRepository.getCheckInDates(languageCode))
+      .when(ok: (d) => d, err: (e) => throw StateError(e.message));
 
   final now = DateTime.now();
   bool isToday(DateTime d) =>
@@ -135,113 +135,129 @@ class _DashboardBody extends ConsumerWidget {
       itemsReviewedToday: dashboard.itemsReviewedToday,
     );
 
-    return ListView(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      children: [
-        Text(
-          language.nativeName,
-          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        Text('${unit.title}$levelSuffix'),
-        const SizedBox(height: 20),
-        Row(
-          children: [
-            const Icon(Icons.local_fire_department, color: Colors.orange),
-            const SizedBox(width: 4),
-            Text(
-              '${dashboard.streak}-day streak',
-              key: const Key('streak-text'),
-            ),
-            const Spacer(),
-            OutlinedButton(
-              key: const Key('check-in-button'),
-              onPressed: dashboard.checkedInToday
-                  ? null
-                  : () async {
-                      final checkInRepository =
-                          ref.read(checkInRepositoryProvider);
-                      await checkInRepository.checkIn(
-                        languageCode,
-                        DateTime.now(),
-                      );
-                      ref.invalidate(languageDashboardProvider(languageCode));
-                    },
-              child: Text(
-                dashboard.checkedInToday ? 'Checked in' : 'Check in',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            language.nativeName,
+            style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text('${unit.title}$levelSuffix'),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department, color: Colors.orange),
+              const SizedBox(width: 4),
+              Text(
+                '${dashboard.streak}-day streak',
+                key: const Key('streak-text'),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Text("Today's goals", style: Theme.of(context).textTheme.titleSmall),
-        const SizedBox(height: 8),
-        for (final goal in goals)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              key: Key('goal-${goal.label}'),
-              children: [
-                Icon(
-                  goal.isComplete
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: goal.isComplete ? Colors.green : null,
-                  size: 20,
+              const Spacer(),
+              OutlinedButton(
+                key: const Key('check-in-button'),
+                onPressed: dashboard.checkedInToday
+                    ? null
+                    : () async {
+                        final checkInRepository =
+                            ref.read(checkInRepositoryProvider);
+                        await checkInRepository.checkIn(
+                          languageCode,
+                          DateTime.now(),
+                        );
+                        ref.invalidate(languageDashboardProvider(languageCode));
+                      },
+                child: Text(
+                  dashboard.checkedInToday ? 'Checked in' : 'Check in',
                 ),
-                const SizedBox(width: 8),
-                Text(goal.label),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Text("Today's goals", style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 8),
+          for (final goal in goals)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                key: Key('goal-${goal.label}'),
+                children: [
+                  Icon(
+                    goal.isComplete
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: goal.isComplete ? Colors.green : null,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(goal.label),
+                ],
+              ),
+            ),
+          _FunFactCard(languageCode: language.code),
+          const SizedBox(height: 28),
+          FilledButton(
+            key: const Key('start-review-button'),
+            onPressed: () {
+              Navigator.of(context)
+                  .push(
+                MaterialPageRoute(
+                  builder: (_) => ReviewScreen(languageCode: languageCode),
+                ),
+              )
+                  // Progress/streak may have changed while the review screen
+                  // was open — refetch rather than show stale numbers.
+                  .then((_) {
+                ref.invalidate(languageDashboardProvider(languageCode));
+              });
+            },
+            child: Text(
+              dashboard.hasPriorProgress
+                  ? 'Continue review'
+                  : 'Take placement test',
             ),
           ),
-        _FunFactCard(languageCode: language.code),
-        const SizedBox(height: 28),
-        FilledButton(
-          key: const Key('start-review-button'),
-          onPressed: () {
-            Navigator.of(context)
-                .push(
-                  MaterialPageRoute(
-                    builder: (_) => ReviewScreen(languageCode: languageCode),
-                  ),
-                )
-                // Progress/streak may have changed while the review screen
-                // was open — refetch rather than show stale numbers.
-                .then((_) {
-              ref.invalidate(languageDashboardProvider(languageCode));
-            });
-          },
-          child: Text(
-            dashboard.hasPriorProgress
-                ? 'Continue review'
-                : 'Take placement test',
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const Key('start-quiz-button'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => QuizScreen(languageCode: languageCode),
+                ),
+              );
+            },
+            child: const Text('Take a quiz'),
           ),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton(
-          key: const Key('start-quiz-button'),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => QuizScreen(languageCode: languageCode),
-              ),
-            );
-          },
-          child: const Text('Take a quiz'),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton(
-          key: const Key('start-speed-game-button'),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => SpeedGameScreen(languageCode: languageCode),
-              ),
-            );
-          },
-          child: const Text('Speed round'),
-        ),
-      ],
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const Key('start-speed-game-button'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => SpeedGameScreen(languageCode: languageCode),
+                ),
+              );
+            },
+            child: const Text('Speed round'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const Key('start-matching-game-button'),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MatchingGameScreen(languageCode: languageCode),
+                ),
+              );
+            },
+            child: const Text('Word match'),
+          ),
+        ],
+      ),
     );
   }
 }

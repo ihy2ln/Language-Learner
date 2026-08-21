@@ -103,4 +103,16 @@ void main() {
     await tester.pump(const Duration(seconds: 60));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('Word match opens the matching game screen', (tester) async {
+    await tester.pumpWidget(appUnderTest());
+    await tester.pumpAndSettle();
+
+    final button = find.byKey(const Key('start-matching-game-button'));
+    await tester.ensureVisible(button);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+
+    expect(find.text('0 / 6 matched · 0 mistake(s)'), findsOneWidget);
+  });
 }
