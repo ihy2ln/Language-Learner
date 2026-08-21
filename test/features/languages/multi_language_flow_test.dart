@@ -12,10 +12,10 @@ import '../../providers/speech/fake_tts_adapter.dart';
 
 /// The Spanish flow gets exhaustive end-to-end coverage in
 /// review_flow_test.dart. This file just proves the same machinery
-/// (ReviewSessionController, LanguageHomeScreen, the TTS button) actually
-/// generalizes to the other seeded languages, each with a different
-/// script and voice hint — not just to the one language it happened to be
-/// built against.
+/// (ReviewSessionController, LanguageHomeScreen, the TTS button, and the
+/// adaptive multiple-choice exercise format) actually generalizes to the
+/// other seeded languages, each with a different script and voice hint —
+/// not just to the one language it happened to be built against.
 void main() {
   setUpAll(() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
@@ -35,6 +35,21 @@ void main() {
     );
   }
 
+  /// Taps the multiple-choice option matching [correctAnswer], then
+  /// Continue. The card scrolls (SingleChildScrollView), so
+  /// ensureVisible before each tap in case a button lands below the test
+  /// viewport.
+  Future<void> answerCorrectly(WidgetTester tester, String correctAnswer) async {
+    final optionFinder = find.byKey(Key('mc-option-$correctAnswer'));
+    await tester.ensureVisible(optionFinder);
+    await tester.tap(optionFinder);
+    await tester.pump();
+    final continueFinder = find.byKey(const Key('continue-button'));
+    await tester.ensureVisible(continueFinder);
+    await tester.tap(continueFinder);
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('English: placement test runs and speaks with the en-US voice',
       (tester) async {
     final tts = FakeTtsAdapter();
@@ -52,11 +67,22 @@ void main() {
     await tester.pump();
     expect(tts.spokenCalls.single.voiceHint, 'en-US');
 
-    for (var i = 0; i < 12; i++) {
-      await tester.tap(find.byKey(const Key('reveal-button')));
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('grade-good')));
-      await tester.pumpAndSettle();
+    const natives = [
+      'buenos días',
+      'buenas tardes',
+      'buenas noches',
+      'hola',
+      'adiós',
+      'por favor',
+      'gracias',
+      'de nada',
+      '¿cómo estás?',
+      '¿cómo está usted?',
+      'mucho gusto',
+      'me llamo...',
+    ];
+    for (final native in natives) {
+      await answerCorrectly(tester, native);
     }
 
     expect(find.byKey(const Key('placement-results')), findsOneWidget);
@@ -86,11 +112,16 @@ void main() {
     // Walk to the first kanji item (i007, お願いします) to confirm it
     // renders like any other item — furigana isn't surfaced in this UI
     // yet, but the kanji target text itself must still round-trip.
-    for (var i = 0; i < 6; i++) {
-      await tester.tap(find.byKey(const Key('reveal-button')));
-      await tester.pump();
-      await tester.tap(find.byKey(const Key('grade-good')));
-      await tester.pumpAndSettle();
+    const natives = [
+      'good morning',
+      'hello / good afternoon',
+      'good evening',
+      'goodbye',
+      'thank you',
+      "excuse me / I'm sorry",
+    ];
+    for (final native in natives) {
+      await answerCorrectly(tester, native);
     }
     expect(find.text('お願いします'), findsOneWidget);
   });

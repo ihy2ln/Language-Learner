@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/exercise/exercise.dart';
 import '../../domain/placement/placement_result.dart';
-import '../../domain/scheduler/grade.dart';
 import '../../providers/speech/speech_providers.dart';
 import 'review_session_controller.dart';
 import 'review_session_state.dart';
 
-/// Flashcard review session. Always prompts target -> native
-/// (Recognition) — this slice doesn't yet vary the prompt direction by
-/// the entry's available exercise types (Recall would prompt the other
-/// way), which is a real simplification, not an oversight.
+/// Review session. Always prompts target -> native (Recognition) — this
+/// slice doesn't yet vary the prompt direction by the entry's available
+/// exercise types (Recall would prompt the other way), a real
+/// simplification, not an oversight.
+///
+/// The exercise format adapts to how many times the item has been lapsed
+/// (domain/exercise/exercise_format.dart): easy/medium items (never
+/// lapsed) are multiple choice, hard/very hard items (lapsed at least
+/// once) require typing the answer. Correctness is detected
+/// automatically rather than self-reported, and maps straight to a
+/// Good/Again grade.
 class ReviewScreen extends ConsumerWidget {
   const ReviewScreen({super.key, required this.languageCode});
 
@@ -134,129 +141,261 @@ class _PlacementResults extends StatelessWidget {
   }
 }
 
-class _Flashcard extends ConsumerWidget {
+class _Flashcard extends ConsumerStatefulWidget {
   const _Flashcard({required this.languageCode, required this.session});
 
   final String languageCode;
   final ReviewSessionState session;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_Flashcard> createState() => _FlashcardState();
+}
+
+class _FlashcardState extends ConsumerState<_Flashcard> {
+  String? _selectedOption;
+  bool? _wasCorrect;
+  List<String>? _mcOptions;
+  final _typedController = TextEditingController();
+
+  @override
+  void didUpdateWidget(covariant _Flashcard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldItemId = oldWidget.session.currentEntry?.itemId;
+    final newItemId = widget.session.currentEntry?.itemId;
+    if (oldItemId != newItemId) {
+      _selectedOption = null;
+      _wasCorrect = null;
+      _mcOptions = null;
+      _typedController.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    _typedController.dispose();
+    super.dispose();
+  }
+
+  void _selectOption(String option, String correctAnswer) {
+    if (_wasCorrect != null) return;
+    setState(() {
+      _selectedOption = option;
+      _wasCorrect = option == correctAnswer;
+    });
+  }
+
+  void _submitTyped(List<String> acceptedAnswers) {
+    if (_wasCorrect != null) return;
+    setState(() {
+      _wasCorrect = isCorrectAnswer(_typedController.text, acceptedAnswers);
+    });
+  }
+
+  void _continue() {
+    final wasCorrect = _wasCorrect;
+    if (wasCorrect == null) return;
+    ref
+        .read(reviewSessionControllerProvider(widget.languageCode).notifier)
+        .submitAnswer(wasCorrect: wasCorrect);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final session = widget.session;
     final item = session.currentItem;
-    final controller =
-        ref.read(reviewSessionControllerProvider(languageCode).notifier);
     final language = session.language;
 
-    return Padding(
+    if (item == null) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('This entry has no content yet.')),
+      );
+    }
+
+    final format = exerciseFormatFor(lapses: session.currentLapses);
+    if (format == ExerciseFormat.multipleChoice) {
+      _mcOptions ??= buildMultipleChoiceOptions(
+        correctAnswer: item.native,
+        pool: [
+          for (final other in session.itemsById.values)
+            if (other.id != item.id) other.native,
+        ],
+      );
+    }
+
+    final answered = _wasCorrect != null;
+
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             '${session.currentIndex + 1} / ${session.entries.length}',
             style: Theme.of(context).textTheme.labelMedium,
           ),
-          const Spacer(),
-          if (item == null)
-            const Text('This entry has no content yet.')
-          else ...[
-            Text(
-              item.target,
-              key: const Key('review-target-text'),
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+          const SizedBox(height: 24),
+          Text(
+            item.target,
+            key: const Key('review-target-text'),
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          // Capability is read from data (CLAUDE.md hard rule #6) — no TTS
+          // button at all for a language with hasTts: false, not a
+          // disabled one.
+          if (language.hasTts) ...[
+            const SizedBox(height: 4),
+            IconButton(
+              key: const Key('tts-button'),
+              icon: const Icon(Icons.volume_up),
+              tooltip: 'Play pronunciation',
+              onPressed: () {
+                ref.read(ttsAdapterProvider).speak(
+                      item.target,
+                      voiceHint: language.ttsVoiceHint ?? language.code,
+                    );
+              },
             ),
-            // Capability is read from data (CLAUDE.md hard rule #6) — no
-            // TTS button at all for a language with hasTts: false, not a
-            // disabled one.
-            if (language.hasTts) ...[
-              const SizedBox(height: 4),
-              IconButton(
-                key: const Key('tts-button'),
-                icon: const Icon(Icons.volume_up),
-                tooltip: 'Play pronunciation',
-                onPressed: () {
-                  ref.read(ttsAdapterProvider).speak(
-                        item.target,
-                        voiceHint: language.ttsVoiceHint ?? language.code,
-                      );
-                },
-              ),
-            ],
-            if (session.revealed) ...[
-              const SizedBox(height: 16),
-              Text(
-                item.native,
-                key: const Key('review-native-text'),
-                style: const TextStyle(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
-              if (item.note != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  item.note!,
-                  style: Theme.of(context).textTheme.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ],
           ],
-          const Spacer(),
-          if (!session.revealed)
-            FilledButton(
-              key: const Key('reveal-button'),
-              onPressed: controller.reveal,
-              child: const Text('Show answer'),
+          const SizedBox(height: 24),
+          if (format == ExerciseFormat.multipleChoice)
+            _MultipleChoiceOptions(
+              options: _mcOptions!,
+              correctAnswer: item.native,
+              selected: _selectedOption,
+              onSelect: (option) => _selectOption(option, item.native),
             )
           else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _GradeButton(
-                  gradeKey: const Key('grade-again'),
-                  label: 'Again',
-                  onPressed: () => controller.grade(Grade.again),
-                ),
-                _GradeButton(
-                  gradeKey: const Key('grade-hard'),
-                  label: 'Hard',
-                  onPressed: () => controller.grade(Grade.hard),
-                ),
-                _GradeButton(
-                  gradeKey: const Key('grade-good'),
-                  label: 'Good',
-                  onPressed: () => controller.grade(Grade.good),
-                ),
-                _GradeButton(
-                  gradeKey: const Key('grade-easy'),
-                  label: 'Easy',
-                  onPressed: () => controller.grade(Grade.easy),
-                ),
-              ],
+            _TypedAnswerField(
+              controller: _typedController,
+              enabled: !answered,
+              onSubmit: () => _submitTyped(item.answerVariants),
             ),
-          const SizedBox(height: 8),
+          if (answered) ...[
+            const SizedBox(height: 16),
+            _AnswerFeedback(wasCorrect: _wasCorrect!, correctAnswer: item.native),
+            if (item.note != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                item.note!,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 16),
+            FilledButton(
+              key: const Key('continue-button'),
+              onPressed: _continue,
+              child: const Text('Continue'),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _GradeButton extends StatelessWidget {
-  const _GradeButton({
-    required this.gradeKey,
-    required this.label,
-    required this.onPressed,
+class _MultipleChoiceOptions extends StatelessWidget {
+  const _MultipleChoiceOptions({
+    required this.options,
+    required this.correctAnswer,
+    required this.selected,
+    required this.onSelect,
   });
 
-  final Key gradeKey;
-  final String label;
-  final VoidCallback onPressed;
+  final List<String> options;
+  final String correctAnswer;
+  final String? selected;
+  final ValueChanged<String> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      key: gradeKey,
-      onPressed: onPressed,
-      child: Text(label),
+    final answered = selected != null;
+    return Column(
+      children: [
+        for (final option in options)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                key: Key('mc-option-$option'),
+                onPressed: answered ? null : () => onSelect(option),
+                style: !answered
+                    ? null
+                    : OutlinedButton.styleFrom(
+                        backgroundColor: option == correctAnswer
+                            ? Colors.green.withValues(alpha: 0.15)
+                            : option == selected
+                                ? Colors.red.withValues(alpha: 0.15)
+                                : null,
+                      ),
+                child: Text(option),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _TypedAnswerField extends StatelessWidget {
+  const _TypedAnswerField({
+    required this.controller,
+    required this.enabled,
+    required this.onSubmit,
+  });
+
+  final TextEditingController controller;
+  final bool enabled;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextField(
+          key: const Key('typed-answer-field'),
+          controller: controller,
+          enabled: enabled,
+          textAlign: TextAlign.center,
+          onSubmitted: enabled ? (_) => onSubmit() : null,
+          decoration: const InputDecoration(hintText: 'Type the answer'),
+        ),
+        const SizedBox(height: 12),
+        FilledButton(
+          key: const Key('submit-typed-button'),
+          onPressed: enabled ? onSubmit : null,
+          child: const Text('Check'),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnswerFeedback extends StatelessWidget {
+  const _AnswerFeedback({required this.wasCorrect, required this.correctAnswer});
+
+  final bool wasCorrect;
+  final String correctAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(
+          wasCorrect ? Icons.check_circle : Icons.cancel,
+          color: wasCorrect ? Colors.green : Colors.red,
+          size: 32,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          wasCorrect ? 'Correct!' : 'Not quite — it\'s "$correctAnswer".',
+          key: const Key('answer-feedback'),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

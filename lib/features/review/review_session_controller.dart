@@ -57,8 +57,10 @@ class ReviewSessionController
       language: language,
       itemsById: itemsById,
       entries: entries,
+      lapsesByItemId: {
+        for (final p in progress) p.itemId: p.lapses,
+      },
       currentIndex: 0,
-      revealed: false,
       reviewedCount: 0,
       correctCount: 0,
       // No prior progress at all means this is the learner's first-ever
@@ -69,13 +71,13 @@ class ReviewSessionController
     );
   }
 
-  void reveal() {
-    final current = state.valueOrNull;
-    if (current == null || current.isFinished || current.revealed) return;
-    state = AsyncData(current.copyWith(revealed: true));
-  }
-
-  Future<void> grade(Grade grade) async {
+  /// Records the outcome of the current card (correct/incorrect, as
+  /// determined by the multiple-choice selection or typed-answer match)
+  /// and advances to the next one. There's no separate self-report grade
+  /// step anymore — the exercise format (domain/exercise) already decided
+  /// how the answer was captured, so correctness maps straight to Good or
+  /// Again.
+  Future<void> submitAnswer({required bool wasCorrect}) async {
     final current = state.valueOrNull;
     if (current == null || current.isFinished) return;
 
@@ -87,18 +89,16 @@ class ReviewSessionController
       final updated = _scheduler.review(
         itemId: itemId,
         current: existing,
-        grade: grade,
+        grade: wasCorrect ? Grade.good : Grade.again,
         now: DateTime.now(),
       );
       await _progressRepository.save(_languageCode, updated);
     }
 
-    final isCorrect = grade == Grade.good || grade == Grade.easy;
     state = AsyncData(current.copyWith(
       currentIndex: current.currentIndex + 1,
-      revealed: false,
       reviewedCount: current.reviewedCount + 1,
-      correctCount: current.correctCount + (isCorrect ? 1 : 0),
+      correctCount: current.correctCount + (wasCorrect ? 1 : 0),
     ));
   }
 }

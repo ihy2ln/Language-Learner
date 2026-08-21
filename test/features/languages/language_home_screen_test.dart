@@ -59,9 +59,11 @@ void main() {
 
     await tester.tap(find.byKey(const Key('start-review-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('reveal-button')));
+    // First item, fresh session: multiple choice. Answer it (correct or
+    // not doesn't matter here) to record progress, then head back.
+    await tester.tap(find.byKey(const Key('mc-option-good morning')));
     await tester.pump();
-    await tester.tap(find.byKey(const Key('grade-good')));
+    await tester.tap(find.byKey(const Key('continue-button')));
     await tester.pumpAndSettle();
     await tester.pageBack();
     await tester.pumpAndSettle();

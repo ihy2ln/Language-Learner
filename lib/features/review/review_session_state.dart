@@ -1,15 +1,15 @@
 import '../../domain/entities/entities.dart';
 import '../../domain/session/session.dart';
 
-/// UI-facing state for one review session: which entries are queued, which
-/// one is current, and whether its answer is currently revealed.
+/// UI-facing state for one review session: which entries are queued and
+/// which one is current.
 class ReviewSessionState {
   const ReviewSessionState({
     required this.language,
     required this.itemsById,
     required this.entries,
+    required this.lapsesByItemId,
     required this.currentIndex,
-    required this.revealed,
     required this.reviewedCount,
     required this.correctCount,
     required this.isPlacementTest,
@@ -18,11 +18,17 @@ class ReviewSessionState {
   final Language language;
   final Map<String, Item> itemsById;
   final List<SessionEntry> entries;
+
+  /// Each item's lapse count as of session start (absent, i.e. 0, for an
+  /// item with no prior progress) — read once at build time to decide
+  /// each card's exercise format (domain/exercise); not updated
+  /// mid-session.
+  final Map<String, int> lapsesByItemId;
+
   final int currentIndex;
-  final bool revealed;
   final int reviewedCount;
 
-  /// Graded Good or Easy — used for the placement-test score.
+  /// Graded Good — used for the placement-test score.
   final int correctCount;
 
   /// True when this session was built with no prior progress for the
@@ -40,9 +46,10 @@ class ReviewSessionState {
     return itemsById[entry!.itemId];
   }
 
+  int get currentLapses => lapsesByItemId[currentEntry?.itemId] ?? 0;
+
   ReviewSessionState copyWith({
     int? currentIndex,
-    bool? revealed,
     int? reviewedCount,
     int? correctCount,
   }) {
@@ -50,8 +57,8 @@ class ReviewSessionState {
       language: language,
       itemsById: itemsById,
       entries: entries,
+      lapsesByItemId: lapsesByItemId,
       currentIndex: currentIndex ?? this.currentIndex,
-      revealed: revealed ?? this.revealed,
       reviewedCount: reviewedCount ?? this.reviewedCount,
       correctCount: correctCount ?? this.correctCount,
       isPlacementTest: isPlacementTest,
